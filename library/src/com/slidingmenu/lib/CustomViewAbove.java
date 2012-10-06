@@ -28,6 +28,7 @@ import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
 
+import com.slidingmenu.lib.SlidingMenu.EdgeRenderer;
 import com.slidingmenu.lib.SlidingMenu.OnClosedListener;
 import com.slidingmenu.lib.SlidingMenu.OnOpenedListener;
 //import com.slidingmenu.lib.SlidingMenu.OnCloseListener;
@@ -54,6 +55,10 @@ public class CustomViewAbove extends ViewGroup {
 
 	private int mCurItem;
 	private Scroller mScroller;
+
+	private int mShadowWidth;
+	private Drawable mShadowDrawable;
+	private EdgeRenderer mEdgeRenderer;
 
 	private boolean mScrollingCacheEnabled;
 
@@ -281,6 +286,82 @@ public class CustomViewAbove extends ViewGroup {
 		OnPageChangeListener oldListener = mInternalPageChangeListener;
 		mInternalPageChangeListener = listener;
 		return oldListener;
+	}
+
+	/**
+	 * Set the margin between pages.
+	 *
+	 * @param shadowWidth Distance between adjacent pages in pixels
+	 * @see #getShadowWidth()
+	 * @see #setShadowDrawable(Drawable)
+	 * @see #setShadowDrawable(int)
+	 */
+	public void setShadowWidth(int shadowWidth) {
+		mShadowWidth = shadowWidth;
+		invalidate();
+	}
+
+	/**
+	 * Return the margin between pages.
+	 *
+	 * @return The size of the margin in pixels
+	 */
+	public int getShadowWidth() {
+		return mShadowWidth;
+	}
+
+	/**
+	 * Set a drawable that will be used to fill the margin between pages.
+	 *
+	 * @param d Drawable to display between pages
+	 */
+	public void setShadowDrawable(Drawable d) {
+		mShadowDrawable = d;
+		if (d != null) refreshDrawableState();
+		setWillNotDraw(d == null);
+		invalidate();
+	}
+
+	/**
+	 * Set a renderer that will be used to draw custom graphics in the margin
+	 * between the pages.
+	 * 
+	 * @param renderer
+	 *            the <code>EdgeRenderer</code> to use. Nullable.
+	 */
+	public void setEdgeRenderer(EdgeRenderer renderer) {
+		mEdgeRenderer = renderer;
+		if (mEdgeRenderer != null) {
+			refreshDrawableState();
+			setWillNotDraw(mEdgeRenderer == null);
+			invalidate();
+		}
+	}
+
+	/**
+	 * Set a drawable that will be used to fill the margin between pages.
+	 * 
+	 * @param resId
+	 *            Resource ID of a drawable to display between pages
+	 */
+	public void setShadowDrawable(int resId) {
+		setShadowDrawable(getContext().getResources().getDrawable(resId));
+	}
+
+
+	@Override
+	protected boolean verifyDrawable(Drawable who) {
+		return super.verifyDrawable(who) || who == mShadowDrawable;
+	}
+
+
+	@Override
+	protected void drawableStateChanged() {
+		super.drawableStateChanged();
+		final Drawable d = mShadowDrawable;
+		if (d != null && d.isStateful()) {
+			d.setState(getDrawableState());
+		}
 	}
 
 	// We want the duration of the page snap animation to be influenced by the distance that
@@ -792,6 +873,10 @@ public class CustomViewAbove extends ViewGroup {
 			mCustomViewBehind.scrollBehindTo(mContent, x, y);
 //		if (mSelectorDrawable != null)
 //			invalidate();
+
+		if (mShadowDrawable != null || mSelectorDrawable != null
+				|| mEdgeRenderer != null)
+			invalidate();
 	}
 
 	private int determineTargetPage(float pageOffset, int velocity, int deltaX) {
@@ -821,6 +906,36 @@ public class CustomViewAbove extends ViewGroup {
 		mCustomViewBehind.drawFade(mContent, canvas, getPercentOpen());
 		//		if (mSelectorEnabled)
 		//			onDrawMenuSelector(canvas, getPercentOpen());
+		if (mShadowWidth > 0) {
+			if (mEdgeRenderer != null) {
+				mEdgeRenderer.renderEdge(canvas, bounds);
+			}
+		}
+	}
+
+    /**
+     * Pads our content window so that it fits within the system windows.
+     * @param insets The insets by which we need to offset our view.
+     * @return True since we handled the padding change.
+     */
+    @Override
+    protected boolean fitSystemWindows(Rect insets) {
+
+        if (mContent != null) {
+            int leftPadding = mContent.getPaddingLeft() + insets.left;
+            int rightPadding = mContent.getPaddingRight() + insets.right;
+            int topPadding = insets.top;
+            int bottomPadding = insets.bottom;
+            mContent.setPadding(leftPadding, topPadding, rightPadding, bottomPadding);
+            return true;
+        }
+
+        return super.fitSystemWindows(insets);
+    }
+
+	@Override
+	protected void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
 	}
 
 	// variables for drawing
