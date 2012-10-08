@@ -107,7 +107,7 @@ public class SlidingFragmentActivity extends FragmentActivity implements Sliding
 	/* (non-Javadoc)
 	 * @see com.slidingmenu.lib.app.SlidingActivityBase#toggle()
 	 */
-	public void toggle() {
+	public void toggleMenu() {
 		mHelper.toggle();
 	}
 

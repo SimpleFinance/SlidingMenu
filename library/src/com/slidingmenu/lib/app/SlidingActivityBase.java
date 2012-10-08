@@ -44,7 +44,7 @@ public interface SlidingActivityBase {
 	/**
 	 * Toggle the SlidingMenu. If it is open, it will be closed, and vice versa.
 	 */
-	public void toggle();
+	public void toggleMenu();
 	
 	/**
 	 * Close the SlidingMenu and show the content view.

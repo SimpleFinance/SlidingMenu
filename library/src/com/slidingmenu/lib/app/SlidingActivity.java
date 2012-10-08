@@ -107,7 +107,7 @@ public class SlidingActivity extends Activity implements SlidingActivityBase {
 	/* (non-Javadoc)
 	 * @see com.slidingmenu.lib.app.SlidingActivityBase#toggle()
 	 */
-	public void toggle() {
+	public void toggleMenu() {
 		mHelper.toggle();
 	}
 
